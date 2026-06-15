@@ -1,0 +1,57 @@
+name: API Tests
+
+# Run the API test automation whenever a pull request targets main, and again
+# when commits land on main (e.g. once a PR is merged).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+
+    env:
+      PORT: 3000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start API in background
+        run: npm start &
+
+      - name: Wait for API to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:${PORT}/api/healthcheck; then
+              echo ""
+              echo "API is up and healthy."
+              exit 0
+            fi
+            echo "Waiting for API to start... attempt $i/30"
+            sleep 2
+          done
+          echo "API did not become healthy in time."
+          exit 1
+
+      - name: Run API tests
+        run: npm test
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mochawesome-report
+          path: mochawesome-report
+          if-no-files-found: ignore
