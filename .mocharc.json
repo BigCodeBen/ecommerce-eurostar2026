@@ -1,0 +1,12 @@
+{
+  "spec": "test/pathCoverage/**/*.test.js",
+  "require": "test/setup.js",
+  "reporter": "mochawesome",
+  "reporter-option": [
+    "reportDir=mochawesome-report",
+    "reportTitle=REST API Path Coverage",
+    "reportFilename=path-coverage"
+  ],
+  "timeout": 10000,
+  "exit": true
+}
